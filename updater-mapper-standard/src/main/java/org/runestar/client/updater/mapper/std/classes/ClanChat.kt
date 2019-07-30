@@ -2,23 +2,22 @@ package org.runestar.client.updater.mapper.std.classes
 
 import org.runestar.client.common.startsWith
 import org.objectweb.asm.Opcodes.*
+import org.objectweb.asm.Type.BYTE_TYPE
 import org.objectweb.asm.Type.INT_TYPE
 import org.objectweb.asm.Type.VOID_TYPE
 import org.runestar.client.updater.mapper.IdentityMapper
 import org.runestar.client.updater.mapper.OrderMapper
-import org.runestar.client.updater.mapper.annotations.DependsOn
-import org.runestar.client.updater.mapper.annotations.MethodParameters
-import org.runestar.client.updater.mapper.annotations.SinceVersion
-import org.runestar.client.updater.mapper.extensions.and
-import org.runestar.client.updater.mapper.extensions.predicateOf
-import org.runestar.client.updater.mapper.extensions.type
-import org.runestar.client.updater.mapper.tree.Class2
-import org.runestar.client.updater.mapper.tree.Field2
-import org.runestar.client.updater.mapper.tree.Instruction2
-import org.runestar.client.updater.mapper.tree.Method2
+import org.runestar.client.updater.mapper.DependsOn
+import org.runestar.client.updater.mapper.MethodParameters
+import org.runestar.client.updater.mapper.and
+import org.runestar.client.updater.mapper.predicateOf
+import org.runestar.client.updater.mapper.type
+import org.runestar.client.updater.mapper.Class2
+import org.runestar.client.updater.mapper.Field2
+import org.runestar.client.updater.mapper.Instruction2
+import org.runestar.client.updater.mapper.Method2
 import java.lang.reflect.Modifier
 
-@SinceVersion(164)
 @DependsOn(UserList::class, ClanMate::class)
 class ClanChat : IdentityMapper.Class() {
 
@@ -40,6 +39,10 @@ class ClanChat : IdentityMapper.Class() {
         override val predicate = predicateOf<Field2> { it.type == type<LoginType>() }
     }
 
+    class minKick : IdentityMapper.InstanceField() {
+        override val predicate = predicateOf<Field2> { it.type == BYTE_TYPE }
+    }
+
     class name : OrderMapper.InConstructor.Field(ClanChat::class, 0) {
         override val predicate = predicateOf<Instruction2> { it.opcode == PUTFIELD && it.fieldType == String::class.type }
     }
@@ -48,10 +51,10 @@ class ClanChat : IdentityMapper.Class() {
         override val predicate = predicateOf<Instruction2> { it.opcode == PUTFIELD && it.fieldType == String::class.type }
     }
 
-    @MethodParameters("buffer")
-    @DependsOn(Buffer::class)
+    @MethodParameters("packet")
+    @DependsOn(Packet::class)
     class readUpdate : IdentityMapper.InstanceMethod() {
-        override val predicate = predicateOf<Method2> { it.arguments.startsWith(type<Buffer>()) }
+        override val predicate = predicateOf<Method2> { it.arguments.startsWith(type<Packet>()) }
                 .and { it.instructions.any { it.opcode == IINC } }
     }
 

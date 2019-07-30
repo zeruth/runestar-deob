@@ -4,23 +4,21 @@ import org.runestar.client.common.startsWith
 import org.objectweb.asm.Opcodes.*
 import org.objectweb.asm.Type.*
 import org.runestar.client.updater.mapper.*
-import org.runestar.client.updater.mapper.annotations.DependsOn
-import org.runestar.client.updater.mapper.annotations.MethodParameters
-import org.runestar.client.updater.mapper.annotations.SinceVersion
-import org.runestar.client.updater.mapper.extensions.and
-import org.runestar.client.updater.mapper.extensions.predicateOf
-import org.runestar.client.updater.mapper.extensions.type
-import org.runestar.client.updater.mapper.tree.Class2
-import org.runestar.client.updater.mapper.tree.Field2
-import org.runestar.client.updater.mapper.tree.Instruction2
-import org.runestar.client.updater.mapper.tree.Method2
+import org.runestar.client.updater.mapper.DependsOn
+import org.runestar.client.updater.mapper.MethodParameters
+import org.runestar.client.updater.mapper.and
+import org.runestar.client.updater.mapper.predicateOf
+import org.runestar.client.updater.mapper.type
+import org.runestar.client.updater.mapper.Class2
+import org.runestar.client.updater.mapper.Field2
+import org.runestar.client.updater.mapper.Instruction2
+import org.runestar.client.updater.mapper.Method2
 
 @DependsOn(Actor::class)
 class Player : IdentityMapper.Class() {
     override val predicate = predicateOf<Class2> { it.superType == type<Actor>() }
             .and { it.instanceFields.size > 1 }
 
-    @SinceVersion(162)
     @DependsOn(Username::class)
     class username : InstanceField() {
         override val predicate = predicateOf<Field2> { it.type == type<Username>() }
@@ -144,22 +142,20 @@ class Player : IdentityMapper.Class() {
                 .prevWithin(6) { it.opcode == GETFIELD && it.fieldType == INT_TYPE && it.fieldOwner == type<Player>() }
     }
 
-    @SinceVersion(162)
     @DependsOn(TriBool::class)
     class isFriend : OrderMapper.InConstructor.Field(Player::class, 0, 2) {
         override val predicate = predicateOf<Instruction2> { it.opcode == PUTFIELD && it.fieldType == type<TriBool>() }
     }
 
-    @SinceVersion(162)
     @DependsOn(TriBool::class)
     class isInClanChat : OrderMapper.InConstructor.Field(Player::class, 1, 2) {
         override val predicate = predicateOf<Instruction2> { it.opcode == PUTFIELD && it.fieldType == type<TriBool>() }
     }
 
-    @MethodParameters("buffer")
-    @DependsOn(Buffer::class)
+    @MethodParameters("packet")
+    @DependsOn(Packet::class)
     class read : IdentityMapper.InstanceMethod() {
         override val predicate = predicateOf<Method2> { it.returnType == VOID_TYPE }
-                .and { it.arguments.startsWith(type<Buffer>()) }
+                .and { it.arguments.startsWith(type<Packet>()) }
     }
 }

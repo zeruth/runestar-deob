@@ -5,12 +5,12 @@ import org.runestar.client.api.util.DisposablePlugin
 import org.runestar.client.game.api.HslColor
 import org.runestar.client.game.api.NpcDefinition
 import org.runestar.client.game.api.NpcId
-import org.runestar.client.game.api.WidgetId
+import org.runestar.client.game.api.ComponentId
 import org.runestar.client.game.api.live.Npcs
-import org.runestar.client.game.api.live.Widgets
+import org.runestar.client.game.api.live.Components
 import org.runestar.client.game.raw.CLIENT
 import org.runestar.client.game.raw.access.XClient
-import org.runestar.client.game.raw.access.XNpcDefinition
+import org.runestar.client.game.raw.access.XNPCType
 import org.runestar.client.plugins.spi.PluginSettings
 import java.time.Duration
 
@@ -38,15 +38,15 @@ class CastleWars : DisposablePlugin<CastleWars.Settings>() {
     private val gameTimerSeconds: Stopwatch = Stopwatch.createUnstarted()
 
     override fun onStart() {
-        add(XNpcDefinition.init.exit.subscribe { onNpcDefinitionInit(NpcDefinition(it.instance)) })
-        resetNpcDefinitions()
+        add(XNPCType.postDecode.exit.subscribe { onNPCTypeInit(NpcDefinition(it.instance)) })
+        resetNPCTypes()
 
         if (settings.showTimerSeconds) {
-            add(XClient.drawLoggedIn.enter.subscribe { onDrawWidgets() })
+            add(XClient.drawLoggedIn.enter.subscribe { onDrawComponents() })
         }
     }
 
-    private fun onNpcDefinitionInit(def: NpcDefinition) {
+    private fun onNPCTypeInit(def: NpcDefinition) {
         if (!isBarricade(def.id)) return
         if (settings.showBarricadesOnMinimap) {
             def.drawMapDot = true
@@ -56,10 +56,10 @@ class CastleWars : DisposablePlugin<CastleWars.Settings>() {
         }
     }
 
-    private fun onDrawWidgets() {
-        var w = Widgets[WidgetId.CASTLE_WARS_ZAMORAK_TIME_LEFT]
+    private fun onDrawComponents() {
+        var w = Components[ComponentId.CASTLE_WARS_ZAMORAK_TIME_LEFT]
         if (w == null || w.accessor.cycle == -1) {
-            w = Widgets[WidgetId.CASTLE_WARS_SARADOMIN_TIME_LEFT] ?: return
+            w = Components[ComponentId.CASTLE_WARS_SARADOMIN_TIME_LEFT] ?: return
         }
         val s = w.text ?: return
         if (s.endsWith(" Min")) {
@@ -81,7 +81,7 @@ class CastleWars : DisposablePlugin<CastleWars.Settings>() {
     }
 
     override fun onStop() {
-        resetNpcDefinitions()
+        resetNPCTypes()
     }
 
     private fun isBarricade(npcId: Int): Boolean {
@@ -99,11 +99,11 @@ class CastleWars : DisposablePlugin<CastleWars.Settings>() {
         }
     }
 
-    private fun resetNpcDefinitions() {
-        CLIENT.npcDefinition_cachedModels.clear()
-        CLIENT.npcDefinition_cached.clear()
+    private fun resetNPCTypes() {
+        CLIENT.npcType_cachedModels.clear()
+        CLIENT.npcType_cached.clear()
         Npcs.forEach {
-            it.accessor.definition = CLIENT.getNpcDefinition(it.accessor.definition.id)
+            it.accessor.type = CLIENT.getNPCType(it.accessor.type.id)
         }
     }
 

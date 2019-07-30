@@ -5,17 +5,19 @@ import org.objectweb.asm.Opcodes.*
 import org.objectweb.asm.Type.*
 import org.runestar.client.updater.mapper.IdentityMapper
 import org.runestar.client.updater.mapper.OrderMapper
-import org.runestar.client.updater.mapper.annotations.DependsOn
-import org.runestar.client.updater.mapper.annotations.MethodParameters
-import org.runestar.client.updater.mapper.annotations.SinceVersion
-import org.runestar.client.updater.mapper.extensions.*
-import org.runestar.client.updater.mapper.tree.Class2
-import org.runestar.client.updater.mapper.tree.Field2
-import org.runestar.client.updater.mapper.tree.Instruction2
-import org.runestar.client.updater.mapper.tree.Method2
+import org.runestar.client.updater.mapper.DependsOn
+import org.runestar.client.updater.mapper.MethodParameters
+import org.runestar.client.updater.mapper.and
+import org.runestar.client.updater.mapper.id
+import org.runestar.client.updater.mapper.predicateOf
+import org.runestar.client.updater.mapper.Class2
+import org.runestar.client.updater.mapper.Field2
+import org.runestar.client.updater.mapper.Instruction2
+import org.runestar.client.updater.mapper.Method2
+import org.runestar.client.updater.mapper.type
+import org.runestar.client.updater.mapper.withDimensions
 import java.lang.reflect.Modifier
 
-@SinceVersion(162)
 @DependsOn(User::class)
 class UserList : IdentityMapper.Class() {
 
@@ -38,7 +40,6 @@ class UserList : IdentityMapper.Class() {
         override val predicate = predicateOf<Field2> { it.type == type<User>().withDimensions(1) }
     }
 
-    @SinceVersion(164)
     class comparator : IdentityMapper.InstanceField() {
         override val predicate = predicateOf<Field2> { it.type == Comparator::class.type }
     }
@@ -202,7 +203,6 @@ class UserList : IdentityMapper.Class() {
                 .and { it.instructions.any { it.isMethod && it.methodId == method<remove>().id } }
     }
 
-    @SinceVersion(164)
     @MethodParameters()
     @DependsOn(comparator::class)
     class removeComparator : IdentityMapper.InstanceMethod() {
@@ -210,7 +210,6 @@ class UserList : IdentityMapper.Class() {
                 .and { it.instructions.any { it.opcode == PUTFIELD && it.fieldId == field<comparator>().id } }
     }
 
-    @SinceVersion(164)
     @MethodParameters("c")
     @DependsOn(comparator::class)
     class addComparator : IdentityMapper.InstanceMethod() {

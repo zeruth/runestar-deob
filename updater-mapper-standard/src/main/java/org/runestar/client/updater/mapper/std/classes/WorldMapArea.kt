@@ -8,15 +8,15 @@ import org.objectweb.asm.Type.INT_TYPE
 import org.objectweb.asm.Type.VOID_TYPE
 import org.runestar.client.updater.mapper.IdentityMapper
 import org.runestar.client.updater.mapper.OrderMapper
-import org.runestar.client.updater.mapper.annotations.DependsOn
-import org.runestar.client.updater.mapper.annotations.MethodParameters
-import org.runestar.client.updater.mapper.extensions.and
-import org.runestar.client.updater.mapper.extensions.predicateOf
-import org.runestar.client.updater.mapper.extensions.type
-import org.runestar.client.updater.mapper.tree.Class2
-import org.runestar.client.updater.mapper.tree.Field2
-import org.runestar.client.updater.mapper.tree.Instruction2
-import org.runestar.client.updater.mapper.tree.Method2
+import org.runestar.client.updater.mapper.DependsOn
+import org.runestar.client.updater.mapper.MethodParameters
+import org.runestar.client.updater.mapper.and
+import org.runestar.client.updater.mapper.predicateOf
+import org.runestar.client.updater.mapper.type
+import org.runestar.client.updater.mapper.Class2
+import org.runestar.client.updater.mapper.Field2
+import org.runestar.client.updater.mapper.Instruction2
+import org.runestar.client.updater.mapper.Method2
 import java.util.LinkedList
 
 class WorldMapArea : IdentityMapper.Class() {
@@ -30,15 +30,15 @@ class WorldMapArea : IdentityMapper.Class() {
         override val predicate = predicateOf<Method2> { it.returnType == type<WorldMapSection>() }
     }
 
-    @DependsOn(TileLocation::class)
+    @DependsOn(Coord::class)
     class origin0 : IdentityMapper.InstanceField() {
-        override val predicate = predicateOf<Field2> { it.type == type<TileLocation>() }
+        override val predicate = predicateOf<Field2> { it.type == type<Coord>() }
     }
 
     @MethodParameters()
-    @DependsOn(origin0::class, TileLocation::class)
+    @DependsOn(origin0::class, Coord::class)
     class origin : IdentityMapper.InstanceMethod() {
-        override val predicate = predicateOf<Method2> { it.returnType == type<TileLocation>() }
+        override val predicate = predicateOf<Method2> { it.returnType == type<Coord>() }
                 .and { it.instructions.any { it.opcode == GETFIELD && it.fieldId == field<origin0>().id } }
     }
 
@@ -46,10 +46,10 @@ class WorldMapArea : IdentityMapper.Class() {
         override val predicate = predicateOf<Field2> { it.type == LinkedList::class.type }
     }
 
-    @DependsOn(Buffer::class)
+    @DependsOn(Packet::class)
     class read : IdentityMapper.InstanceMethod() {
         override val predicate = predicateOf<Method2> { it.returnType == VOID_TYPE }
-                .and { it.arguments == listOf(type<Buffer>(), INT_TYPE) }
+                .and { it.arguments == listOf(type<Packet>(), INT_TYPE) }
     }
 
     @DependsOn(read::class)
@@ -155,24 +155,24 @@ class WorldMapArea : IdentityMapper.Class() {
     }
 
     @MethodParameters()
-    @DependsOn(TileLocation.x::class)
+    @DependsOn(Coord.x::class)
     class originX : IdentityMapper.InstanceMethod() {
         override val predicate = predicateOf<Method2> { it.returnType == INT_TYPE }
-                .and { it.instructions.any { it.opcode == GETFIELD && it.fieldId == field<TileLocation.x>().id } }
+                .and { it.instructions.any { it.opcode == GETFIELD && it.fieldId == field<Coord.x>().id } }
     }
 
     @MethodParameters()
-    @DependsOn(TileLocation.y::class)
+    @DependsOn(Coord.z::class)
     class originY : IdentityMapper.InstanceMethod() {
         override val predicate = predicateOf<Method2> { it.returnType == INT_TYPE }
-                .and { it.instructions.any { it.opcode == GETFIELD && it.fieldId == field<TileLocation.y>().id } }
+                .and { it.instructions.any { it.opcode == GETFIELD && it.fieldId == field<Coord.z>().id } }
     }
 
     @MethodParameters()
-    @DependsOn(TileLocation.plane::class)
+    @DependsOn(Coord.y::class)
     class originPlane : IdentityMapper.InstanceMethod() {
         override val predicate = predicateOf<Method2> { it.returnType == INT_TYPE }
-                .and { it.instructions.any { it.opcode == GETFIELD && it.fieldId == field<TileLocation.plane>().id } }
+                .and { it.instructions.any { it.opcode == GETFIELD && it.fieldId == field<Coord.y>().id } }
     }
 
     @MethodParameters()
@@ -186,9 +186,9 @@ class WorldMapArea : IdentityMapper.Class() {
     }
 
     @MethodParameters("x", "y")
-    @DependsOn(TileLocation::class)
+    @DependsOn(Coord::class)
     class coord : IdentityMapper.InstanceMethod() {
-        override val predicate = predicateOf<Method2> { it.returnType == type<TileLocation>() }
+        override val predicate = predicateOf<Method2> { it.returnType == type<Coord>() }
                 .and { it.arguments.size == 2 }
     }
 
