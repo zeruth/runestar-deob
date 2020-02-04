@@ -15,6 +15,7 @@ import org.runestar.client.updater.deob.Transformer
 import org.runestar.client.updater.deob.util.*
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.logging.Logger
 
 object MultiplierFixer : Transformer {
 
@@ -29,6 +30,31 @@ object MultiplierFixer : Transformer {
         check(Files.exists(multFile))
 
         val decoders: Map<String, Long> = mapper.readValue(multFile.toFile())
+        val annoDecoders: Map<String, Number> = mapper.readValue(multFile.toFile())
+
+        var numValueInjections = 0
+        var numValueInjectionsMissed = 0;
+        for (mult in annoDecoders.keys) {
+            val clasz = classNodes.find { classNode -> classNode.name == mult.split(".")[0] }
+            if (clasz != null) {
+                val field = clasz.fields.find { field -> field.name == mult.split(".")[1] }
+                if (field !=null) {
+                    if (annoDecoders[mult] is Long) {
+                        field.visitAnnotation("Lnet/runelite/mapping/ObfuscatedGetter;", true).visit("longValue", annoDecoders[mult])
+                        numValueInjections++
+                    } else {
+                        field.visitAnnotation("Lnet/runelite/mapping/ObfuscatedGetter;", true).visit("intValue", annoDecoders[mult])
+                        numValueInjections++
+                    }
+                } else {
+                    numValueInjectionsMissed++
+                }
+            } else {
+                numValueInjectionsMissed++
+            }
+        }
+
+        Logger.getAnonymousLogger().info("Added " + numValueInjections + " ObfuscatedGetter Annotations, missed " + numValueInjectionsMissed)
 
         for (c in classNodes) {
             for (m in c.methods) {

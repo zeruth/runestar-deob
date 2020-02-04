@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.runestar.client</groupId>
         <artifactId>client-parent</artifactId>
-        <version>0.181.0-SNAPSHOT</version>
+        <version>0.188.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>client-common</artifactId>
@@ -33,6 +33,9 @@
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
+                <configuration>
+                    <jvmTarget>1.8</jvmTarget>
+                </configuration>
             </plugin>
         </plugins>
     </build>
