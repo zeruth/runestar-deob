@@ -1,8 +1,5 @@
-# RuneStar Client for Old School RuneScape
-
-[![Build Status](https://img.shields.io/circleci/project/github/RuneStar/client.svg)](https://circleci.com/gh/RuneStar/client)
-[![Discord](https://img.shields.io/discord/384870460640329728.svg?logo=discord)](https://discord.gg/G2kxrnU)
-
-[**Download**](https://github.com/RuneStar/launcher)
-
-[**Browse Plugins**](https://github.com/RuneStar/client/tree/master/plugins/src/main/java/org/runestar/client/plugins)
+# openosrs-deob  
+  
+This is a deobfuscator that is 99% the work of RuneStar, All credit goes to them!  
+  
+Slightly modified to work with RuneLite's injection annotations, and deob has been seperated from the rest of the project.  
