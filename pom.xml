@@ -14,25 +14,9 @@
 
     <modules>
         <module>common</module>
-        <module>client</module>
-        <module>api</module>
-        <module>game-api</module>
-        <module>game-raw-base</module>
-        <module>game-raw</module>
-        <module>game-raw-accessors-maven-plugin</module>
-        <module>plugins</module>
-        <module>plugins-dev</module>
-        <module>plugins-spi</module>
-        <module>patch-maven-plugin</module>
         <module>updater</module>
         <module>updater-common</module>
         <module>updater-deob</module>
-        <module>updater-create-maven-plugin</module>
-        <module>updater-mapper</module>
-        <module>updater-mapper-standard</module>
-        <module>cache-ids</module>
-        <module>cache-ids-generate-maven-plugin</module>
-        <module>web</module>
     </modules>
 
     <repositories>
@@ -261,6 +245,8 @@
                     <version>3.8.1</version>
                     <configuration>
                         <release>${version.java}</release>
+                        <source>1.8</source>
+                        <target>1.8</target>
                     </configuration>
                 </plugin>
                 <plugin>
