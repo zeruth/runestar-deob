@@ -115,14 +115,18 @@ object OpaquePredicateArgumentRemover : Transformer {
                     if (method.visibleAnnotations!=null) {
                         val annotation = method.visibleAnnotations.find { annotation -> annotation.desc == "Lnet/runelite/mapping/ObfuscatedSignature;"}
                         if (annotation != null) {
-                            annotation.visit("description", annoDecoders[mult])
+                            val garbageVal = annotation.values.get(1)
+                            method.visibleAnnotations.remove(annotation)
+                            method.visitAnnotation("Lnet/runelite/mapping/ObfuscatedSignature;", true).visit("signature", annoDecoders[mult])
+                            val newAnnotation = method.visibleAnnotations.find { newAnnotation -> annotation.desc == "Lnet/runelite/mapping/ObfuscatedSignature;"}
+                            newAnnotation!!.visit("garbageValue", garbageVal)
                             descriptionInjections++
                         } else {
                             System.out.println("Didnt get ObfuscatedSignature annotation (should already exist)")
                             descriptionMissedInjections++
                         }
                     } else {
-                        method.visitAnnotation("Lnet/runelite/mapping/ObfuscatedSignature;", true).visit("description", annoDecoders[mult])
+                        method.visitAnnotation("Lnet/runelite/mapping/ObfuscatedSignature;", true).visit("signature", annoDecoders[mult])
                         descriptionInjections++
                     }
                 } else {

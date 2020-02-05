@@ -64,7 +64,7 @@ object OpaquePredicateCheckRemover : Transformer {
         val opFile = destination.resolveSibling(destination.fileName.toString() + ".op.json").toFile()
         mapper.writeValue(opFile, passingArgs)
 
-        val annoDecoders: Map<String, Number> = mapper.readValue(opFile)
+        val annoDecoders: Map<String, String> = mapper.readValue(opFile)
 
         var garbageValueInjections = 0;
         var garbageValueMissedInjections = 0
