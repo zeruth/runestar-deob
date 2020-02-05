@@ -1,6 +1,7 @@
 package org.runestar.client.updater.deob;
 
-import java.nio.file.Path;
+import org.runestar.client.updater.deob.rs.DeobToDeob;
+
 import java.nio.file.Paths;
 
 public class Main {

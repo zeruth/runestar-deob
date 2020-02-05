@@ -41,7 +41,9 @@ interface Transformer {
                 DebugRemover,
                 RemoveEnclosingMethodAttributes,
                 MultiplierFinder,
-                MultiplierFixer
+                MultiplierFixer,
+                MultiplierAnnotations,
+                SignatureAnnotations
         )
 
         /**

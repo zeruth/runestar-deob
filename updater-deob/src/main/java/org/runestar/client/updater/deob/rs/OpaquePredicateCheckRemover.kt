@@ -64,29 +64,7 @@ object OpaquePredicateCheckRemover : Transformer {
         val opFile = destination.resolveSibling(destination.fileName.toString() + ".op.json").toFile()
         mapper.writeValue(opFile, passingArgs)
 
-        val annoDecoders: Map<String, String> = mapper.readValue(opFile)
-
-        var garbageValueInjections = 0;
-        var garbageValueMissedInjections = 0
-        for (mult in annoDecoders.keys) {
-            val clasz = classNodes.find { classNode -> classNode.name == mult.split(".")[0] }
-            if (clasz != null) {
-                val method = (clasz.methods.find { method -> method.name == mult.split(".")[1].split("(")[0] &&
-                        method.desc == "(" + mult.split(".")[1].split("(")[1]})
-                if (method !=null) {
-                        method.visitAnnotation("Lnet/runelite/mapping/ObfuscatedSignature;", true).visit("garbageValue", annoDecoders[mult])
-                    garbageValueInjections++
-                } else {
-                    System.out.println("Didnt get Field")
-                    garbageValueMissedInjections++
-                }
-            } else {
-                System.out.println("Didnt get Class ")
-                garbageValueMissedInjections++
-            }
-        }
         writeJar(classNodes, destination)
-        Logger.getAnonymousLogger().info("Added " + garbageValueInjections + " ObfuscatedSignature Annotations, missed " + garbageValueMissedInjections)
     }
 
     private fun AbstractInsnNode.matchesReturn(lastParamIndex: Int): Boolean {
