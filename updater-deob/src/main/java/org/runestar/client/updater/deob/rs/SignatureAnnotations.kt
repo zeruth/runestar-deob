@@ -50,9 +50,6 @@ object SignatureAnnotations : Transformer {
         }
         Logger.getAnonymousLogger().info("Added " + garbageValueInjections + " ObfuscatedSignature Annotations, missed " + garbageValueMissedInjections)
 
-        opFile = destination.resolveSibling(destination.fileName.toString() + ".op-descs.json").toFile()
-
-        annoDecoders = mapper.readValue(opFile)
 
         var descriptionInjections = 0;
         var descriptionMissedInjections = 0
@@ -68,10 +65,19 @@ object SignatureAnnotations : Transformer {
                         if (annotation != null) {
                             val garbageVal = annotation.values.get(1)
                             method.visibleAnnotations.remove(annotation)
-                            method.visitAnnotation("Lnet/runelite/mapping/ObfuscatedSignature;", true).visit("signature", annoDecoders[mult])
-                            val newAnnotation = method.visibleAnnotations.find { newAnnotation -> annotation.desc == "Lnet/runelite/mapping/ObfuscatedSignature;"}
-                            newAnnotation!!.visit("garbageValue", garbageVal)
-                            descriptionInjections++
+                            if (method.signature!=null)
+                            {
+                                method.visitAnnotation("Lnet/runelite/mapping/ObfuscatedSignature;", true).visit("signature", method.signature)
+                            }
+                            if (method.desc!=null)
+                            {
+                                val newAnnotation = method.visibleAnnotations.find { newAnnotation -> annotation.desc == "Lnet/runelite/mapping/ObfuscatedSignature;"}
+                                if (newAnnotation!=null)
+                                {
+                                    newAnnotation.visit("garbageValue", method.desc)
+                                    descriptionInjections++
+                                }
+                            }
                         } else {
                             println("Didnt get ObfuscatedSignature annotation (should already exist)")
                             descriptionMissedInjections++

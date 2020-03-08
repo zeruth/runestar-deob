@@ -39,11 +39,9 @@ object MultiplierAnnotations : Transformer {
                 val field = clasz.fields.find { field -> field.name == mult.split(".")[1] }
                 if (field !=null) {
                     if (annoDecoders[mult] is Long) {
-                        println(annoDecoders[mult])
                         field.visitAnnotation("Lnet/runelite/mapping/ObfuscatedGetter;", true).visit("longValue", annoDecoders[mult])
                         numValueInjections++
                     } else {
-                        println(annoDecoders[mult])
                         field.visitAnnotation("Lnet/runelite/mapping/ObfuscatedGetter;", true).visit("intValue", annoDecoders[mult])
                         numValueInjections++
                     }

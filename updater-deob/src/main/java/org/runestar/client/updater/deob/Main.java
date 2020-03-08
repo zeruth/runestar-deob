@@ -7,6 +7,6 @@ import java.nio.file.Paths;
 public class Main {
     public static void main(String[] args)
     {
-        Transformer.Companion.getDEFAULT().transform(Paths.get("./gamepack.jar"),Paths.get("./deob.jar"));
+        Transformer.Companion.getDEFAULT().transform(Paths.get("./osrs_decomp.jar"),Paths.get("./deob.jar"));
     }
 }
