@@ -8,58 +8,33 @@ import org.objectweb.asm.Opcodes.*
 import org.objectweb.asm.Type
 import org.objectweb.asm.Type.INT_TYPE
 import org.objectweb.asm.Type.LONG_TYPE
-import org.objectweb.asm.tree.*
-import org.objectweb.asm.tree.analysis.*
+import org.objectweb.asm.tree.AbstractInsnNode
+import org.objectweb.asm.tree.ClassNode
+import org.objectweb.asm.tree.FieldInsnNode
+import org.objectweb.asm.tree.InsnList
+import org.objectweb.asm.tree.InsnNode
+import org.objectweb.asm.tree.LdcInsnNode
+import org.objectweb.asm.tree.MethodNode
+import org.objectweb.asm.tree.analysis.Analyzer
+import org.objectweb.asm.tree.analysis.Interpreter
+import org.objectweb.asm.tree.analysis.SourceInterpreter
+import org.objectweb.asm.tree.analysis.SourceValue
+import org.objectweb.asm.tree.analysis.Value
 import org.runestar.client.updater.common.invert
 import org.runestar.client.updater.deob.Transformer
+import org.runestar.client.updater.deob.common.ComputeFrames
 import org.runestar.client.updater.deob.util.*
-import java.nio.file.Files
 import java.nio.file.Path
-import java.util.logging.Logger
 
-object MultiplierFixer : Transformer {
+object MultiplierFixer : Transformer.Tree() {
 
     private val mapper = jacksonObjectMapper().enable(SerializationFeature.INDENT_OUTPUT)
 
     private val logger = getLogger()
 
-    override fun transform(source: Path, destination: Path) {
-        val classNodes = readJar(source)
-
-        val multFile: Path = source.resolveSibling(source.fileName.toString() + ".mult.json")
-        check(Files.exists(multFile))
-
-        val decoders: Map<String, Long> = mapper.readValue(multFile.toFile())
-        val annoDecoders: Map<String, Number> = mapper.readValue(multFile.toFile())
-
-        var numValueInjections = 0
-        var numValueInjectionsMissed = 0;
-        for (mult in annoDecoders.keys) {
-            val clasz = classNodes.find { classNode -> classNode.name == mult.split(".")[0] }
-            if (clasz != null) {
-                val field = clasz.fields.find { field -> field.name == mult.split(".")[1] }
-                if (field !=null) {
-                    println("Modding "+clasz.name+":"+field.name)
-                    if (annoDecoders[mult] is Long) {
-                        println(annoDecoders[mult])
-                        field.visitAnnotation("Lnet/runelite/mapping/ObfuscatedGetter;", true).visit("longValue", annoDecoders[mult])
-                        numValueInjections++
-                    } else {
-                        println(annoDecoders[mult])
-                        field.visitAnnotation("Lnet/runelite/mapping/ObfuscatedGetter;", true).visit("intValue", annoDecoders[mult])
-                        numValueInjections++
-                    }
-                } else {
-                    numValueInjectionsMissed++
-                }
-            } else {
-                numValueInjectionsMissed++
-            }
-        }
-
-        Logger.getAnonymousLogger().info("Added " + numValueInjections + " ObfuscatedGetter Annotations, missed " + numValueInjectionsMissed)
-
-        for (c in classNodes) {
+    override fun transform(dir: Path, klasses: List<ClassNode>) {
+        val decoders: Map<String, Long> = mapper.readValue(dir.resolve("mult.json").toFile())
+        for (c in klasses) {
             for (m in c.methods) {
                 m.maxStack += 2 // todo
                 cancelOutMultipliers(m, decoders)
@@ -67,8 +42,9 @@ object MultiplierFixer : Transformer {
                 m.maxStack -= 2
             }
         }
-
-        writeJar(classNodes, destination)
+        val classNodes = klasses.map { ClassNode(it.toByteArray()) }
+        val classNames = classNodes.associateBy { it.name }
+        writeClasses(classNodes.map { it.toByteArray(ComputeFrames.Writer(classNames)) }, dir.resolve("deob-210.jar"))
     }
 
     private fun cancelOutMultipliers(m: MethodNode, decoders: Map<String, Long>) {
@@ -169,7 +145,7 @@ object MultiplierFixer : Transformer {
             }
             other is Expr.Const -> {
                 insnList.removeSafe(mul.insn, mul.const.insn)
-                insnList.setSafe(other.insn, pushConstIntInsn(n * other.n.toInt()))
+                insnList.setSafe(other.insn, loadInt(n * other.n.toInt()))
             }
             other is Expr.Add -> {
                 insnList.removeSafe(mul.insn, mul.const.insn)
@@ -177,7 +153,7 @@ object MultiplierFixer : Transformer {
                 distributeAddition(insnList, other.b, n)
             }
             n == 1 -> insnList.removeSafe(mul.insn, mul.const.insn)
-            else -> insnList.setSafe(mul.const.insn, pushConstIntInsn(n))
+            else -> insnList.setSafe(mul.const.insn, loadInt(n))
         }
     }
 
@@ -191,7 +167,7 @@ object MultiplierFixer : Transformer {
             }
             other is Expr.Const -> {
                 insnList.removeSafe(mul.insn, mul.const.insn)
-                insnList.setSafe(other.insn, pushConstLongInsn(n * other.n.toLong()))
+                insnList.setSafe(other.insn, loadLong(n * other.n.toLong()))
             }
             other is Expr.Add -> {
                 insnList.removeSafe(mul.insn, mul.const.insn)
@@ -199,13 +175,13 @@ object MultiplierFixer : Transformer {
                 distributeAddition(insnList, other.b, n)
             }
             n == 1L -> insnList.removeSafe(mul.insn, mul.const.insn)
-            else -> insnList.setSafe(mul.const.insn, pushConstLongInsn(n))
+            else -> insnList.setSafe(mul.const.insn, loadLong(n))
         }
     }
 
     private fun distributeAddition(insnList: InsnList, expr: Expr, n: Int) {
         when (expr) {
-            is Expr.Const -> insnList.setSafe(expr.insn, pushConstIntInsn(n * expr.n.toInt()))
+            is Expr.Const -> insnList.setSafe(expr.insn, loadInt(n * expr.n.toInt()))
             is Expr.Mul -> associateMultiplication(insnList, expr, n)
             else -> error(expr)
         }
@@ -213,7 +189,7 @@ object MultiplierFixer : Transformer {
 
     private fun distributeAddition(insnList: InsnList, expr: Expr, n: Long) {
         when (expr) {
-            is Expr.Const -> insnList.setSafe(expr.insn, pushConstLongInsn(n * expr.n.toLong()))
+            is Expr.Const -> insnList.setSafe(expr.insn, loadLong(n * expr.n.toLong()))
             is Expr.Mul -> associateMultiplication(insnList, expr, n)
             else -> error(expr)
         }

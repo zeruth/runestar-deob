@@ -17,16 +17,14 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.logging.Logger
 
-object MultiplierAnnotations : Transformer {
+object MultiplierAnnotations : Transformer.Tree() {
 
     private val mapper = jacksonObjectMapper().enable(SerializationFeature.INDENT_OUTPUT)
 
     private val logger = getLogger()
 
-    override fun transform(source: Path, destination: Path) {
-        val classNodes = readJar(source)
-
-        val multFile: Path = source.resolveSibling(source.fileName.toString() + ".mult.json")
+    override fun transform(dir: Path, klasses: List<ClassNode>) {
+        val multFile = dir.resolve( "mult.json")
         check(Files.exists(multFile))
 
         val annoDecoders: Map<String, Number> = mapper.readValue(multFile.toFile())
@@ -34,16 +32,14 @@ object MultiplierAnnotations : Transformer {
         var numValueInjections = 0
         var numValueInjectionsMissed = 0;
         for (mult in annoDecoders.keys) {
-            val clasz = classNodes.find { classNode -> classNode.name == mult.split(".")[0] }
+            val clasz = klasses.find { classNode -> classNode.name == mult.split(".")[0] }
             if (clasz != null) {
                 val field = clasz.fields.find { field -> field.name == mult.split(".")[1] }
                 if (field !=null) {
                     if (annoDecoders[mult] is Long) {
-                        println(annoDecoders[mult])
                         field.visitAnnotation("Lnet/runelite/mapping/ObfuscatedGetter;", true).visit("longValue", annoDecoders[mult])
                         numValueInjections++
                     } else {
-                        println(annoDecoders[mult])
                         field.visitAnnotation("Lnet/runelite/mapping/ObfuscatedGetter;", true).visit("intValue", annoDecoders[mult])
                         numValueInjections++
                     }
@@ -56,7 +52,5 @@ object MultiplierAnnotations : Transformer {
         }
 
         Logger.getAnonymousLogger().info("Added " + numValueInjections + " ObfuscatedGetter Annotations, missed " + numValueInjectionsMissed)
-
-        writeJar(classNodes, destination)
     }
 }
